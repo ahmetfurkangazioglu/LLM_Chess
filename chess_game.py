@@ -28,23 +28,19 @@ class ChessGame:
         self.AI_MAX_THINK = ai_max_think
         self.STOCKFISH_SKILL = stockfish_skill
 
-        # Init pygame
         pygame.init()
         self.screen = pygame.display.set_mode((self.WINDOW_WIDTH, self.WINDOW_HEIGHT))
         pygame.display.set_caption("LLM satranç")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 24)
 
-        # Load images
         self.images = {}
         self._load_piece_images()
 
-        # Chess board and engine
         self.board = chess.Board()
         self.stockfish = Stockfish(path=self.STOCKFISH_EXE)
         self.stockfish.update_engine_parameters({"Skill Level": self.STOCKFISH_SKILL})
 
-        # State
         self.selected_square = None
         self.legal_destinations = []
         self.ai_thinking = False
@@ -52,12 +48,10 @@ class ChessGame:
         self.game_over = False
         self.info_message = "Sen (Beyaz) oynuyor."
         
-        # Chat
         self.chat_manager = ChatManager()
         self.chat_input = ""
         self.chat_scroll = 0
-        
-        # Move tracking
+
         self.move_manager = MoveManager()
 
     def _load_piece_images(self):
@@ -71,7 +65,6 @@ class ChessGame:
             img = pygame.transform.smoothscale(img, (self.SQUARE_SIZE, self.SQUARE_SIZE))
             self.images[sym] = img
 
-    # Coordinate helpers
     def sq_to_xy(self, square):
         rank = 7 - chess.square_rank(square)
         file = chess.square_file(square)
@@ -122,7 +115,6 @@ class ChessGame:
         info_surf = self.font.render(self.info_message, True, (10, 10, 10))
         self.screen.blit(info_surf, (self.BOARD_MARGIN, self.BOARD_MARGIN + self.BOARD_PIXEL + 10))
         
-        # Chat alanını çiz
         self.draw_chat()
 
     def start_ai_thinking(self):
@@ -157,31 +149,26 @@ class ChessGame:
             self.info_message = f"Oyun bitti: {self.board.result()}"
 
     def draw_chat(self):
-        """Chat alanını sağ tarafta çizer."""
         chat_x = self.BOARD_PIXEL + self.BOARD_MARGIN * 2
         chat_y = self.BOARD_MARGIN
         chat_h = self.BOARD_PIXEL + 40
         
-        # Chat arka plan
         chat_bg = pygame.Rect(chat_x, chat_y, self.CHAT_WIDTH, chat_h)
         pygame.draw.rect(self.screen, (240, 240, 240), chat_bg)
         pygame.draw.rect(self.screen, (100, 100, 100), chat_bg, 2)
         
-        # Başlık
         title = self.font.render("Chat", True, (0, 0, 0))
         self.screen.blit(title, (chat_x + 10, chat_y + 5))
         
-        # Mesaj alanı
         msg_area = pygame.Rect(chat_x + 5, chat_y + 35, self.CHAT_WIDTH - 10, chat_h - 90)
         pygame.draw.rect(self.screen, (255, 255, 255), msg_area)
         pygame.draw.rect(self.screen, (150, 150, 150), msg_area, 1)
         
-        # Mesajları göster
         messages = self.chat_manager.get_all_messages()
         y_offset = msg_area.y + 5
         small_font = pygame.font.SysFont(None, 18)
         
-        for msg in messages[-15:]:  # Son 15 mesaj
+        for msg in messages[-15:]:
             sender_label = "Sen: " if msg["sender"] == "player" else "AI: "
             text_color = (0, 100, 0) if msg["sender"] == "player" else (0, 0, 150)
             msg_surf = small_font.render(sender_label + msg["message"][:35], True, text_color)
@@ -189,16 +176,13 @@ class ChessGame:
                 self.screen.blit(msg_surf, (msg_area.x + 5, y_offset))
                 y_offset += 20
         
-        # Input alanı
         input_area = pygame.Rect(chat_x + 5, chat_y + chat_h - 50, self.CHAT_WIDTH - 10, 30)
         pygame.draw.rect(self.screen, (255, 255, 255), input_area)
         pygame.draw.rect(self.screen, (100, 100, 100), input_area, 2)
         
-        # Input text
         input_surf = small_font.render(self.chat_input, True, (0, 0, 0))
         self.screen.blit(input_surf, (input_area.x + 5, input_area.y + 8))
         
-        # Send butonu
         send_btn = pygame.Rect(chat_x + 5, chat_y + chat_h - 15, 60, 20)
         pygame.draw.rect(self.screen, (100, 200, 100), send_btn)
         pygame.draw.rect(self.screen, (50, 150, 50), send_btn, 2)
@@ -209,19 +193,17 @@ class ChessGame:
         self.chat_input_rect = input_area
     
     def handle_chat_click(self, mx, my):
-        """Chat input'a tıklanma kontrolü."""
         if hasattr(self, 'chat_input_rect') and self.chat_input_rect.collidepoint(mx, my):
             return True
         if hasattr(self, 'send_button_rect') and self.send_button_rect.collidepoint(mx, my):
             if self.chat_input.strip():
                 self.chat_manager.add_message("player", self.chat_input)
-                # Şimdilik AI otomatik cevap vermiyor, sadece kaydediyor
+
                 self.chat_input = ""
             return True
         return False
 
     def handle_mouse(self, mx, my):
-        # Önce chat alanına tıklama kontrolü
         if self.handle_chat_click(mx, my):
             return
         
@@ -235,13 +217,11 @@ class ChessGame:
             if self.board.piece_at(self.selected_square).piece_type == chess.PAWN and (chess.square_rank(sq) in [0,7]):
                 mv = chess.Move(self.selected_square, sq, promotion=chess.QUEEN)
             
-            # SAN'ı hamleden önce al (board.san() hamlede sonra kullanılamaz)
             move_san = self.board.san(mv)
             move_uci = mv.uci()
             
             self.board.push(mv)
             
-            # Hamleyi kaydet
             self.move_manager.add_move(
                 player="white",
                 move_uci=move_uci,
@@ -278,15 +258,12 @@ class ChessGame:
                         self.handle_mouse(mx, my)
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
-                        # Enter tuşu - mesaj gönder
                         if self.chat_input.strip():
                             self.chat_manager.add_message("player", self.chat_input)
                             self.chat_input = ""
                     elif event.key == pygame.K_BACKSPACE:
-                        # Backspace - son karakteri sil
                         self.chat_input = self.chat_input[:-1]
                     else:
-                        # Normal karakter girişi
                         if len(self.chat_input) < 50:
                             self.chat_input += event.unicode
 
@@ -302,7 +279,7 @@ class ChessGame:
 
             pygame.display.flip()
 
-        # Oyun kapanırken chat ve hamle dosyalarını sil
+
         self.chat_manager.delete_history_file()
         self.move_manager.delete_history_file()
         pygame.quit()
