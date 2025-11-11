@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Game files (temporary)
+chat_history.json
+move_history.json
+
+# Model files (too large)
+*.bin
+*.safetensors
+*.h5
+*.onnx
+
+# Stockfish binary (user must download)
+stockfish.exe
+stockfish
+
+# OS
+.DS_Store
+Thumbs.db
